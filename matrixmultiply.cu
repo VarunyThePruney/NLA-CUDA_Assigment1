@@ -131,4 +131,5 @@ int main()
         free(a);
         free(c);
     }
+    fclose(file);
 }
