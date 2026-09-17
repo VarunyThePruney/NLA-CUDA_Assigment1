@@ -2,6 +2,14 @@
 #include <stdlib.h>
 #include <cuda_runtime.h>
 #include <math.h>
+#include <sys/time.h>
+
+double getTime()
+{
+    struct timeval t;
+    gettimeofday(&t, NULL);
+    return t.tv_sec + t.tv_usec * 0.000001
+}
 
 void createSDD(int *a, int n)
 {
@@ -52,7 +60,6 @@ int main()
         for (int i = 0; i < n; i++)
         {
             b[i] = 100;
-            printf("%d\n", a[i]);
         }
     }
 }
