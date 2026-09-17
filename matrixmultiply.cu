@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <cuda_runtime.h>
 #include <sys/time.h>
+#include <math.h>
 
 double time()
 {
@@ -40,6 +41,20 @@ __global__ void gpuMutiply(float *a, float *c, int n)
     }
 }
 
+int checkResults(float *cpu, float *gpu, int size)
+{
+    for (int i = 0; i < size; i++)
+    {
+        if (cpu[i] != gpu[i])
+        {
+            printf("Results are NOT the same\n");
+            return 0;
+        }
+    }
+    printf("Results match with CPU\n");
+    return 1;
+}
+
 int main()
 {
     int sizes[] = {1000, 2000};
@@ -58,17 +73,19 @@ int main()
         int size = n * n;
 
         float *a = (float *)malloc(size * sizeof(float));
-        float *c = (float *)malloc(size * sizeof(float));
+        float *c_cpu = (float *)malloc(size * sizeof(float));
+        float *c_gpu = (float *)malloc(size * sizeof(float));
 
         for (int i = 0; i < size; i++)
         {
             a[i] = 1;
-            c[i] = 0;
+            c_cpu[i] = 0;
+            c_gpu[i] = 0;
         }
 
         double start = time();
 
-        cpuMultiply(a, c, n);
+        cpuMultiply(a, c_cpu, n);
         double cpu_time = time() - start;
         printf("Matrix %d x %d:\nCPU time: %f seconds\n\n", n, n, cpu_time);
 
@@ -106,6 +123,21 @@ int main()
                 printf("run: %d Total time: %f\n", run + 1, gpuTime);
             }
 
+            cudaMemcpy(c_gpu, d_c, size * sizeof(float), cudaMemcpyDeviceToHost);
+
+            int flag = checkResults(c_cpu, c_gpu, size);
+
+            if (!flag)
+            {
+                cudaFree(d_a);
+                cudaFree(d_c);
+                free(a);
+                free(c_cpu);
+                free(c_gpu);
+                fclose(file);
+                return 1;
+            }
+
             double average = total / 5;
             nxn_time[t] = average;
             printf("Average Time: %f\n", average);
@@ -129,7 +161,8 @@ int main()
         cudaFree(d_a);
         cudaFree(d_c);
         free(a);
-        free(c);
+        free(c_cpu);
+        free(c_gpu);
     }
     fclose(file);
 }
