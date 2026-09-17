@@ -106,7 +106,7 @@ int main()
         }
         printf("Speedup comparing 16x16 to 8x8: %fx\n", nxn_time[0] / nxn_time[1]);
         printf("Speedup comparing 32x32 to 8x8: %fx\n", nxn_time[0] / nxn_time[2]);
-        printf("Speedup comparing 32x32 to 16x16: %fx\n", nxn_time[1] / nxn_time[2]);
+        printf("Speedup comparing 32x32 to 16x16: %fx\n\n", nxn_time[1] / nxn_time[2]);
 
         cudaFree(d_a);
         cudaFree(d_c);
