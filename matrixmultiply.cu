@@ -45,6 +45,13 @@ int main()
     int sizes[] = {1000, 2000};
     int threads[] = {8, 16, 32};
 
+    FILE *file = fopen("results.csv", "a");
+    fseek(file, 0, SEEK_END);
+    if (ftell(file) == 0)
+    {
+        fprintf(file, "Matrix,CPU_Time,Threads,Run1,Run2,Run3,Run4,Run5,Average\n");
+    }
+
     for (int s = 0; s < 2; s++)
     {
         int n = sizes[s];
@@ -77,14 +84,13 @@ int main()
         for (int t = 0; t < 3; t++)
         {
             int thread = threads[t];
-
             dim3 block(thread, thread);
             dim3 grid((n + thread - 1) / thread, (n + thread - 1) / thread);
 
             double total = 0;
+            double runtime[] = {0, 0, 0, 0, 0};
 
             printf("Threads per block: %d x %d\n", thread, thread);
-
             for (int run = 0; run < 5; run++)
             {
                 cudaMemset(d_c, 0, size * sizeof(float));
@@ -95,6 +101,7 @@ int main()
                 cudaDeviceSynchronize();
 
                 double gpuTime = time() - start;
+                runtime[run] = gpuTime;
                 total += gpuTime;
                 printf("run: %d Total time: %f\n", run + 1, gpuTime);
             }
@@ -103,6 +110,17 @@ int main()
             nxn_time[t] = average;
             printf("Average Time: %f\n", average);
             printf("Speedup comparing CPU Time to GPU: %fx\n", cpu_time / average);
+            fprintf(file,
+                    "%d,%f,%dx%d,%f,%f,%f,%f,%f,%f\n",
+                    n,
+                    cpu_time,
+                    thread, thread,
+                    runtime[0],
+                    runtime[1],
+                    runtime[2],
+                    runtime[3],
+                    runtime[4],
+                    average);
         }
         printf("Speedup comparing 16x16 to 8x8: %fx\n", nxn_time[0] / nxn_time[1]);
         printf("Speedup comparing 32x32 to 8x8: %fx\n", nxn_time[0] / nxn_time[2]);
