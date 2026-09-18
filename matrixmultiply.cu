@@ -10,7 +10,7 @@ double time()
     gettimeofday(&t, NULL);
     return t.tv_sec + t.tv_usec * 0.000001;
 }
-
+// Cpu logic, see README for more details
 void cpuMultiply(float *a, float *c, int n)
 {
     for (int i = 0; i < n; i++)
@@ -24,7 +24,7 @@ void cpuMultiply(float *a, float *c, int n)
         }
     }
 }
-
+// Gpu logic, see README formore details
 __global__ void gpuMutiply(float *a, float *c, int n)
 {
     int row = blockIdx.y * blockDim.y + threadIdx.y;
@@ -40,7 +40,7 @@ __global__ void gpuMutiply(float *a, float *c, int n)
         c[row * n + col] = sum;
     }
 }
-
+// Compares C_cpu and C_gpu to verify results
 int checkResults(float *cpu, float *gpu, int size)
 {
     for (int i = 0; i < size; i++)
@@ -60,18 +60,20 @@ int main()
     int sizes[] = {1000, 2000};
     int threads[] = {8, 16, 32};
 
+    // Opens csv as append and writes header if csv doesnt exist
     FILE *file = fopen("results.csv", "a");
     fseek(file, 0, SEEK_END);
     if (ftell(file) == 0)
     {
         fprintf(file, "Matrix,CPU_Time,Threads,Run1,Run2,Run3,Run4,Run5,Average\n");
     }
-
+    // Matrix sizes loop
     for (int s = 0; s < 2; s++)
     {
         int n = sizes[s];
         int size = n * n;
 
+        // Allocates space for A, C_cpu and C_gpu matrices, and initializes them
         float *a = (float *)malloc(size * sizeof(float));
         float *c_cpu = (float *)malloc(size * sizeof(float));
         float *c_gpu = (float *)malloc(size * sizeof(float));
@@ -83,12 +85,14 @@ int main()
             c_gpu[i] = 0;
         }
 
+        // Performs matrix multiplication on CPU and tracks time.
         double start = time();
 
         cpuMultiply(a, c_cpu, n);
         double cpu_time = time() - start;
         printf("Matrix %d x %d:\nCPU time: %f seconds\n\n", n, n, cpu_time);
 
+        // Init data on device for gpu multiply
         float *d_a;
         float *d_c;
 
@@ -96,10 +100,12 @@ int main()
         cudaMalloc(&d_c, size * sizeof(float));
 
         cudaMemcpy(d_a, a, size * sizeof(float), cudaMemcpyHostToDevice);
-        double nxn_time[] = {0, 0, 0};
 
+        // Runs Threads loop for the 3 thread dimensions
+        double nxn_time[] = {0, 0, 0};
         for (int t = 0; t < 3; t++)
         {
+            // Init square thread blocks and finds grid size needed.
             int thread = threads[t];
             dim3 block(thread, thread);
             dim3 grid((n + thread - 1) / thread, (n + thread - 1) / thread);
@@ -107,6 +113,7 @@ int main()
             double total = 0;
             double runtime[] = {0, 0, 0, 0, 0};
 
+            // Runs loop for 5 iterations and measures time
             printf("Threads per block: %d x %d\n", thread, thread);
             for (int run = 0; run < 5; run++)
             {
@@ -122,7 +129,7 @@ int main()
                 total += gpuTime;
                 printf("run: %d Total time: %f\n", run + 1, gpuTime);
             }
-
+            // Copies mem from device to c_gpu for results checking
             cudaMemcpy(c_gpu, d_c, size * sizeof(float), cudaMemcpyDeviceToHost);
 
             int flag = checkResults(c_cpu, c_gpu, size);
@@ -137,7 +144,7 @@ int main()
                 fclose(file);
                 return 1;
             }
-
+            // Calculates and prints results to o/p and results.csv
             double average = total / 5;
             nxn_time[t] = average;
             printf("Average Time: %f\n", average);
