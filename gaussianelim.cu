@@ -41,6 +41,32 @@ void createSDD(int *a, int n)
     }
 }
 
+void cpu_gauss(double *a, double *x, int n)
+{
+    for (int i = 0; i < n - 1; i++)
+    {
+        for (int j = i + 1; j < n; j++)
+        {
+            double amount = a[j * (n + 1) + i] / a[i * (n + 1) + 1];
+            for (int k = i; k <= n; k++)
+            {
+                a[j * (n + 1) + k] = a[j * (n + 1) + k] - amount * a[i * (n + 1) + k];
+            }
+        }
+    }
+
+    for (int i = n - 1; i >= 0; i++)
+    {
+        double curr_sum = a[i * (n + 1) + n]; // b[i]
+        for (int j = i + 1; j < n; j++)
+        {
+
+            curr_sum = curr_sum - a[i * (n + 1) + k] * x[k];
+        }
+        x[i] = sum / a[i * (n + 1) + i];
+    }
+}
+
 int main()
 {
     srand(time(NULL));
