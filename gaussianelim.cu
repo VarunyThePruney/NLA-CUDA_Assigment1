@@ -61,7 +61,7 @@ void cpu_gauss(double *a, double *x, int n)
         for (int j = i + 1; j < n; j++)
         {
 
-            curr_sum = curr_sum - a[i * (n + 1) + k] * x[k];
+            curr_sum = curr_sum - a[i * (n + 1) + j] * x[j]; // b[i] - ∑aij * x[j]
         }
         x[i] = sum / a[i * (n + 1) + i];
     }
