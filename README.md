@@ -2,6 +2,11 @@
 SE24UCSE242 - Varun Sai Golakoti\
 SE24UCSE244 - 
 
+---
+<h3>Notice:</h3>Most of these tests and data were performed with Google Colabs's T4 GPU. The reason we used Google Colab for the assignment was due to the delay in recieving DGX A100 accounts for the group and both group members having laptops without GPUs.<br>
+As a result, many of the results may be slightly slower as compared to the same code ran on A100, due to the T4 being significantly slower than the A100.
+<br><br>
+
 # Matrix Multiplication:
 Matrix multiplication consists of 3 main loops
 1. Sizes loop: iterates twice between 1000x1000 matrix and 2000x2000 matrix.<br>This is also where the rows major arrays for A and C_cpu and C_gpu are initialized and cpuMultiply is ran with recorded times.
@@ -16,7 +21,7 @@ The core logic of CPU is simple, mainly residing in one line. It runs a triple l
 <h3>GPU Multiply Logic:</h3>
 GPU does a somewhat similar thing, but rather than using loops to find the cell to work on, it uses the x and y coordinates of the block and thread to find the row and column. <br>Example: if you are on the 5th block and 3th thread using a 8x8 block dimension, your row is 5 * 8 + 3 = 43. As we discussed earlier, for 1000x1000 matrix, there will be 125 blocks, so doing [0-124] * 8 + [0-7] gives 1000 options, exactly one for each row. Similarly for the x coordinate and columns. You get 1000 more options, giving you exactly one thread for each cell in 1000x1000. Then: 
 <br>&emsp;&emsp;&emsp;&emsp;sum += a[row * n + k] * a[k * n + col]; 
-<br> is used again in a very similar fashion as CPU, but replacing the i and j with row and col. Finally, it runs cudaSynchronize to ensure that main function waits and all threads are finished to continue calculating runtime and others.
+<br> is used again in a very similar fashion as CPU, but replacing the i and j with row and col and copied after the inner loop finishes to c matrix. Finally, it runs cudaSynchronize to ensure that main function waits and all threads are finished to continue calculating runtime and others.
 <br>
 <br>
 
