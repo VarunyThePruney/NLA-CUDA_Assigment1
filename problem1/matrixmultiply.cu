@@ -93,13 +93,13 @@ int main()
         printf("Matrix %d x %d:\nCPU time: %f seconds\n\n", n, n, cpu_time);
 
         // Init data on device for gpu multiply
-        float *d_a;
-        float *d_c;
+        float *gpudev_a;
+        float *gpudev_c;
 
-        cudaMalloc(&d_a, size * sizeof(float));
-        cudaMalloc(&d_c, size * sizeof(float));
+        cudaMalloc(&gpudev_a, size * sizeof(float));
+        cudaMalloc(&gpudev_c, size * sizeof(float));
 
-        cudaMemcpy(d_a, a, size * sizeof(float), cudaMemcpyHostToDevice);
+        cudaMemcpy(gpudev_a, a, size * sizeof(float), cudaMemcpyHostToDevice);
 
         // Runs Threads loop for the 3 thread dimensions
         double nxn_time[] = {0, 0, 0};
@@ -117,11 +117,11 @@ int main()
             printf("Threads per block: %d x %d\n", thread, thread);
             for (int run = 0; run < 5; run++)
             {
-                cudaMemset(d_c, 0, size * sizeof(float));
+                cudaMemset(gpudev_c, 0, size * sizeof(float));
                 cudaDeviceSynchronize();
                 start = time();
 
-                gpuMutiply<<<grid, block>>>(d_a, d_c, n);
+                gpuMutiply<<<grid, block>>>(gpudev_a, gpudev_c, n);
                 cudaDeviceSynchronize();
 
                 double gpuTime = time() - start;
@@ -130,14 +130,14 @@ int main()
                 printf("run: %d Total time: %f\n", run + 1, gpuTime);
             }
             // Copies mem from device to c_gpu for results checking
-            cudaMemcpy(c_gpu, d_c, size * sizeof(float), cudaMemcpyDeviceToHost);
+            cudaMemcpy(c_gpu, gpudev_c, size * sizeof(float), cudaMemcpyDeviceToHost);
 
             int flag = checkResults(c_cpu, c_gpu, size);
 
             if (!flag)
             {
-                cudaFree(d_a);
-                cudaFree(d_c);
+                cudaFree(gpudev_a);
+                cudaFree(gpudev_c);
                 free(a);
                 free(c_cpu);
                 free(c_gpu);
@@ -165,8 +165,8 @@ int main()
         printf("Speedup comparing 32x32 to 8x8: %fx\n", nxn_time[0] / nxn_time[2]);
         printf("Speedup comparing 32x32 to 16x16: %fx\n\n", nxn_time[1] / nxn_time[2]);
 
-        cudaFree(d_a);
-        cudaFree(d_c);
+        cudaFree(gpudev_a);
+        cudaFree(gpudev_c);
         free(a);
         free(c_cpu);
         free(c_gpu);
