@@ -62,10 +62,41 @@ int main()
 
     // Opens csv as append and writes header if csv doesnt exist
     FILE *file = fopen("results.csv", "a");
+
+    int run = 1;
+
+    fseek(file, 0, SEEK_END);
+
+    if (ftell(file) != 0)
+    {
+        FILE *readFile = fopen("results.csv", "r");
+
+        char line[1024];
+        int lastRun = 0;
+
+        fgets(line, sizeof(line), readFile);
+
+        while (fgets(line, sizeof(line), readFile))
+        {
+            int currentRun;
+
+            if (sscanf(line, "%d,", &currentRun) == 1)
+            {
+                if (currentRun > lastRun)
+                {
+                    lastRun = currentRun;
+                }
+            }
+        }
+
+        run = lastRun + 1;
+
+        fclose(readFile);
+    }
     fseek(file, 0, SEEK_END);
     if (ftell(file) == 0)
     {
-        fprintf(file, "Matrix,CPU_Time,Threads,Run1,Run2,Run3,Run4,Run5,Average\n");
+        fprintf(file, "Run,Matrix,CPU_Time,Threads,Run1,Run2,Run3,Run4,Run5,Average\n");
     }
     // Matrix sizes loop
     for (int s = 0; s < 2; s++)
@@ -150,10 +181,11 @@ int main()
             printf("Average Time: %f\n", average);
             printf("Speedup comparing CPU Time to GPU: %fx\n", cpu_time / average);
             fprintf(file,
-                    "%d,%f,%dx%d,%f,%f,%f,%f,%f,%f\n",
+                    "%d,%d,%f,%d,%f,%f,%f,%f,%f,%f\n",
+                    run,
                     n,
                     cpu_time,
-                    thread, thread,
+                    thread,
                     runtime[0],
                     runtime[1],
                     runtime[2],
