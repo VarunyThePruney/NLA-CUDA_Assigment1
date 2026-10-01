@@ -17,26 +17,36 @@ void createSDD(int *a, int n)
 {
     for (int i = 0; i < n; i++)
     {
-        int count = 0;
-
         for (int j = 0; j < n; j++)
         {
             a[i * n + j] = 0;
         }
 
-        while (count < 9)
-        {
-            int j = rand() % n;
+        int diagonal = 0;
 
-            if (j != i && a[i * n + j] == 0)
-            {
-                int temp = (rand() % 2 == 0) ? -1 : 1;
-                a[i * n + j] = temp;
-                count++;
-            }
+        while (diagonal == 0)
+        {
+            diagonal = (rand() % 21) - 10; // ensures non-zero value
         }
 
-        a[i * n + i] = 10;
+        a[i * n + i] = diagonal;
+        int remaining = abs(diagonal) - 1;
+
+        while (remaining > 0)
+        {
+            int j = rand() % n;
+            if (j != i && a[i * n + j] == 0)
+            {
+                int value = 1 + rand() % remaining;
+
+                if (rand() % 2 == 0)
+                {
+                    value = -value;
+                }
+                a[i * n + j] = value;
+                remaining -= abs(value);
+            }
+        }
     }
 }
 
@@ -142,7 +152,7 @@ int main()
 
     int sizes[] = {1000, 2000};
     int threads[] = {8, 16, 32};
-    double epsilon = 0.000001;
+    const double epsilon = 0.000001;
 
     // Opens csv as append and writes header if csv doesnt exist
     FILE *file = fopen("results1.csv", "a");
@@ -254,8 +264,7 @@ int main()
             double total = 0;
             double runtime[] = {0, 0, 0, 0, 0};
 
-            printf("Threads per block: %d x %d\n",
-                   thread, thread);
+            printf("Threads per block: %d x %d\n", thread, thread);
 
             // Runs loop for 5 iterations and measures time
             for (int run = 0; run < 5; run++)
