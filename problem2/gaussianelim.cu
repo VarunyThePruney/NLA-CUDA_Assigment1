@@ -30,8 +30,8 @@ void createSDD(int *a, int n)
 
             if (j != i && a[i * n + j] == 0)
             {
-                int value = (rand() % 2 == 0) ? -1 : 1;
-                a[i * n + j] = value;
+                int temp = (rand() % 2 == 0) ? -1 : 1;
+                a[i * n + j] = temp;
                 count++;
             }
         }
@@ -47,14 +47,11 @@ void sequential(double *a, double *x, int n)
     {
         for (int j = i + 1; j < n; j++)
         {
-            double factor = a[j * (n + 1) + i] /
-                            a[i * (n + 1) + i];
+            double amount = a[j * (n + 1) + i] / a[i * (n + 1) + i];
 
             for (int k = i; k <= n; k++)
             {
-                a[j * (n + 1) + k] =
-                    a[j * (n + 1) + k] -
-                    factor * a[i * (n + 1) + k];
+                a[j * (n + 1) + k] = a[j * (n + 1) + k] - amount * a[i * (n + 1) + k];
             }
         }
     }
@@ -80,12 +77,9 @@ __global__ void gaussian(double *a, int n, int i)
 
     if (j < n && k <= n)
     {
-        double factor = a[j * (n + 1) + i] /
-                        a[i * (n + 1) + i];
+        double amount = a[j * (n + 1) + i] / a[i * (n + 1) + i];
 
-        a[j * (n + 1) + k] =
-            a[j * (n + 1) + k] -
-            factor * a[i * (n + 1) + k];
+        a[j * (n + 1) + k] = a[j * (n + 1) + k] - amount * a[i * (n + 1) + k];
     }
 }
 
@@ -331,7 +325,7 @@ int main()
             printf("Speedup comparing CPU Time to GPU: %fx\n", cpu_time / average);
 
             fprintf(file,
-                    "%d,%d,%f,%f,%d,%f,%f,%f,%f,%f,%f,%f\n",
+                    "%d,%d,%f,%.10e,%d,%f,%f,%f,%f,%f,%f,%.10e\n",
                     run,
                     n,
                     cpu_time,
