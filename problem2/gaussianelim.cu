@@ -50,6 +50,22 @@ void createSDD(int *a, int n)
     }
 }
 
+// Performs back substitution after Gaussian elimination
+void backSubstitution(double *a, double *x, int n)
+{
+    for (int i = n - 1; i >= 0; i--)
+    {
+        double sum = a[i * (n + 1) + n];
+
+        for (int k = i + 1; k < n; k++)
+        {
+            sum = sum - a[i * (n + 1) + k] * x[k];
+        }
+
+        x[i] = sum / a[i * (n + 1) + i];
+    }
+}
+
 // Cpu logic, see README for more details
 void sequential(double *a, double *x, int n)
 {
@@ -65,18 +81,7 @@ void sequential(double *a, double *x, int n)
             }
         }
     }
-
-    for (int i = n - 1; i >= 0; i--)
-    {
-        double sum = a[i * (n + 1) + n];
-
-        for (int k = i + 1; k < n; k++)
-        {
-            sum = sum - a[i * (n + 1) + k] * x[k];
-        }
-
-        x[i] = sum / a[i * (n + 1) + i];
-    }
+    backSubstitution(a, x, n);
 }
 
 // Gpu logic, see README for more details
@@ -90,22 +95,6 @@ __global__ void gaussian(double *a, int n, int i)
         double amount = a[j * (n + 1) + i] / a[i * (n + 1) + i];
 
         a[j * (n + 1) + k] = a[j * (n + 1) + k] - amount * a[i * (n + 1) + k];
-    }
-}
-
-// Performs back substitution after Gaussian elimination
-void backSubstitution(double *a, double *x, int n)
-{
-    for (int i = n - 1; i >= 0; i--)
-    {
-        double sum = a[i * (n + 1) + n];
-
-        for (int k = i + 1; k < n; k++)
-        {
-            sum = sum - a[i * (n + 1) + k] * x[k];
-        }
-
-        x[i] = sum / a[i * (n + 1) + i];
     }
 }
 
@@ -256,7 +245,7 @@ int main()
         double nxn_time[] = {0, 0, 0};
         for (int t = 0; t < 3; t++)
         {
-            // Init square thread blocks
+            // Init thread blocks
             int thread = threads[t];
 
             dim3 block(thread, thread);
