@@ -3,7 +3,7 @@
 #include <math.h>
 #include <sys/time.h>
 
-double time()
+double getTime()
 {
     struct timeval t;
     gettimeofday(&t, NULL);
@@ -39,7 +39,7 @@ void cholesky(double *a, double *l, int n)
             if (i == j)
             {
                 if (sum <= 0.0)
-                    return 0;
+                    return;
 
                 l[i * n + j] = sqrt(sum);
             }
@@ -73,10 +73,22 @@ int main()
         double *l = (double *)calloc(size, sizeof(double));
         printf("\nMatrix: %s (%d x %d)\n", filenames[s], n, n);
 
-        double start = time();
+        double start = getTime();
         cholesky(a, l, n);
-        double cpu_time = time() - start;
+        double cpu_time = getTime() - start;
 
-        printf("%f", cpu_time);
+        // double r = residual(a, l, n);
+        // int verified = r < 1e-10;
+
+        printf("CPU time: %.6f seconds\n", cpu_time);
+        // printf("Relative residual: %.12e\n", r);
+        // printf("Verification: %s\n", verified ? "PASSED" : "FAILED");
+
+        // fprintf(file, "%s,%d,%.6f,%.12e,%s\n", filenames[s], n, cpu_time, r, verified ? "PASSED" : "FAILED");
+
+        fflush(file);
+        free(a);
+        free(l);
     }
+    fclose(file);
 }
