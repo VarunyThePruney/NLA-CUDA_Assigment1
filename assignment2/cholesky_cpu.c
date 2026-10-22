@@ -25,6 +25,58 @@ int readMatrix(char *filename, double **a, int *n)
     return 1;
 }
 
+void cholesky(double *a, double *l, int n)
+{
+    for (int i = 0; i < n; i++)
+    {
+        for (int j = 0; j <= i; j++)
+        {
+            double sum = a[i * n + j];
+
+            for (int k = 0; k < j; k++)
+                sum -= l[i * n + k] * l[j * n + k];
+
+            if (i == j)
+            {
+                if (sum <= 0.0)
+                    return 0;
+
+                l[i * n + j] = sqrt(sum);
+            }
+            else
+                l[i * n + j] = sum / l[j * n + j];
+        }
+    }
+}
+
 int main()
 {
+    char *filenames[] = {
+        "Cholesky_Input_1024x1024.txt",
+        "Cholesky_Input_2048x2048.txt",
+        "Cholesky_Input_4096x4096.txt"};
+
+    FILE *file = fopen("results.csv", "a+");
+    fseek(file, 0, SEEK_END);
+
+    if (ftell(file) == 0)
+        fprintf(file, "Matrix,N,CPU_Time,RelativeResidual,Verified\n");
+
+    for (int s = 0; s < 3; s++)
+    {
+        double *a;
+        int n;
+
+        readMatrix(filenames[s], &a, &n);
+
+        int size = n * n;
+        double *l = (double *)calloc(size, sizeof(double));
+        printf("\nMatrix: %s (%d x %d)\n", filenames[s], n, n);
+
+        double start = time();
+        cholesky(a, l, n);
+        double cpu_time = time() - start;
+
+        printf("%f", cpu_time);
+    }
 }
