@@ -1,3 +1,4 @@
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -10,7 +11,7 @@ double getTime()
     return t.tv_sec + t.tv_usec * 0.000001;
 }
 
-int readMatrix(char *filename, double **a, int *n)
+void readMatrix(char *filename, double **a, int *n)
 {
     FILE *file = fopen(filename, "r");
     fscanf(file, "%d", n);
@@ -22,7 +23,6 @@ int readMatrix(char *filename, double **a, int *n)
         fscanf(file, "%lf", &(*a)[i]);
 
     fclose(file);
-    return 1;
 }
 
 void cholesky(double *a, double *l, int n)
@@ -51,16 +51,47 @@ void cholesky(double *a, double *l, int n)
 
 int main()
 {
-    char *filenames[] = {
-        "Cholesky_Input_1024x1024.txt",
-        "Cholesky_Input_2048x2048.txt",
-        "Cholesky_Input_4096x4096.txt"};
+    char *filenames[] = {"Cholesky_Input_1024x1024.txt", "Cholesky_Input_2048x2048.txt", "Cholesky_Input_4096x4096.txt"};
 
-    FILE *file = fopen("results.csv", "a+");
+    FILE *file = fopen("results.csv", "a");
+
+    int run = 1;
+
+    fseek(file, 0, SEEK_END);
+
+    if (ftell(file) != 0)
+    {
+        FILE *readFile = fopen("results.csv", "r");
+
+        char line[1024];
+        int lastRun = 0;
+
+        fgets(line, sizeof(line), readFile);
+
+        while (fgets(line, sizeof(line), readFile))
+        {
+            int currentRun;
+
+            if (sscanf(line, "%d,", &currentRun) == 1)
+            {
+                if (currentRun > lastRun)
+                {
+                    lastRun = currentRun;
+                }
+            }
+        }
+
+        run = lastRun + 1;
+
+        fclose(readFile);
+    }
+
     fseek(file, 0, SEEK_END);
 
     if (ftell(file) == 0)
-        fprintf(file, "Matrix,N,CPU_Time,RelativeResidual,Verified\n");
+    {
+        fprintf(file, "Matrix,N,T1\n");
+    }
 
     for (int s = 0; s < 3; s++)
     {
@@ -71,24 +102,20 @@ int main()
 
         int size = n * n;
         double *l = (double *)calloc(size, sizeof(double));
-        printf("\nMatrix: %s (%d x %d)\n", filenames[s], n, n);
 
         double start = getTime();
         cholesky(a, l, n);
-        double cpu_time = getTime() - start;
+        double timetaken = getTime() - start;
 
-        // double r = residual(a, l, n);
-        // int verified = r < 1e-10;
+        printf("Matrix: %s\n", filenames[s]);
 
-        printf("CPU time: %.6f seconds\n", cpu_time);
-        // printf("Relative residual: %.12e\n", r);
-        // printf("Verification: %s\n", verified ? "PASSED" : "FAILED");
+        printf("Time taken: %.6f seconds\n\n", timetaken);
+        fprintf(file, "%d,%d,%.6f\n", run, n, timetaken);
 
-        // fprintf(file, "%s,%d,%.6f,%.12e,%s\n", filenames[s], n, cpu_time, r, verified ? "PASSED" : "FAILED");
-
-        fflush(file);
         free(a);
         free(l);
     }
+
     fclose(file);
+    return 0;
 }
