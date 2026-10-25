@@ -70,6 +70,7 @@ int main()
     {
         double e2e_start = time();
         double *a;
+        int n;
 
         readMatrix(filenames[s], &a, &n);
         int size = n * n;
@@ -93,5 +94,14 @@ int main()
         cudaMemcpy(a, gpudev_a, size * sizeof(double), cudaMemcpyDeviceToHost);
 
         double e2e_time = time() - e2e_start;
+        printf("Matrix: %d x %d\n", n, n);
+        printf("TGPU: %f seconds\n", gpu_time);
+        printf("Te2e: %f seconds\n\n", e2e_time);
+
+        fprintf(file, "%s,%d,%f,%f\n", filenames[s], n, gpu_time, e2e_time);
+
+        cudaFree(gpudev_a);
+        free(a);
     }
+    fclose(file);
 }
