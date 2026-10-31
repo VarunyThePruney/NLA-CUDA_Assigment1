@@ -63,8 +63,45 @@ int main()
 {
     char *filenames[] = {"Cholesky_Input_1024x1024.txt", "Cholesky_Input_2048x2048.txt", "Cholesky_Input_4096x4096.txt"};
 
-    FILE *file = fopen("results_gpu.csv", "w");
-    fprintf(file, "Matrix,N,TGPU,Te2e\n");
+    FILE *file = fopen("results_gpu.csv", "a");
+
+    int run = 1;
+
+    fseek(file, 0, SEEK_END);
+
+    if (ftell(file) != 0)
+    {
+        FILE *readFile = fopen("results_gpu.csv", "r");
+
+        char line[1024];
+        int lastRun = 0;
+
+        fgets(line, sizeof(line), readFile);
+
+        while (fgets(line, sizeof(line), readFile))
+        {
+            int currentRun;
+
+            if (sscanf(line, "%d,", &currentRun) == 1)
+            {
+                if (currentRun > lastRun)
+                {
+                    lastRun = currentRun;
+                }
+            }
+        }
+
+        run = lastRun + 1;
+
+        fclose(readFile);
+    }
+
+    fseek(file, 0, SEEK_END);
+
+    if (ftell(file) == 0)
+    {
+        fprintf(file, "Run,N,TGPU,Te2e\n");
+    }
 
     for (int s = 0; s < 3; s++)
     {
@@ -98,7 +135,7 @@ int main()
         printf("TGPU: %f seconds\n", gpu_time);
         printf("Te2e: %f seconds\n\n", e2e_time);
 
-        fprintf(file, "%s,%d,%f,%f\n", filenames[s], n, gpu_time, e2e_time);
+        fprintf(file, "%d,%d,%f,%f\n", run, n, gpu_time, e2e_time);
 
         cudaFree(gpudev_a);
         free(a);
