@@ -89,7 +89,7 @@ int main()
 
     if (ftell(file) == 0)
     {
-        fprintf(file, "Matrix,N,T1\n");
+        fprintf(file, "Run,N,T1\n");
     }
 
     for (int s = 0; s < 3; s++)
